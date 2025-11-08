@@ -1,20 +1,33 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { type Service, getReportsByServiceId } from "@/lib/data"
+import { type Service, getReportsByServiceId, Report } from "@/lib/data"
 import { formatDistanceToNow } from "date-fns"
 import { fr } from "date-fns/locale"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface ServiceDetailProps {
   service: Service
 }
 
 export function ServiceDetail({ service }: ServiceDetailProps) {
-  const reports = getReportsByServiceId(service.id)
+  const [reports, setReports] = useState<Report[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      setLoading(true)
+      const reports = await getReportsByServiceId(service.id)
+      setReports(reports)
+      setLoading(false)
+    }
+    fetchReports()
+  }, [service.id])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,39 +126,58 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
         </Link>
       </div>
 
-      <div className="space-y-4">
-        {reports.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              Aucun signalement pour ce service
-            </CardContent>
-          </Card>
-        ) : (
-          reports.map((report) => (
-            <Card key={report.id}>
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{getProblemTypeBadge(report.problemType)}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(report.timestamp), {
-                          addSuffix: true,
-                          locale: fr,
-                        })}
-                      </span>
-                    </div>
-                    {report.description && <p className="text-foreground">{report.description}</p>}
-                    {report.location && (
-                      <p className="text-sm text-muted-foreground">Localisation: {report.location}</p>
-                    )}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-4 w-28" />
                   </div>
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-4 w-48" />
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reports.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Aucun signalement pour ce service
+              </CardContent>
+            </Card>
+          ) : (
+            reports.map((report) => (
+              <Card key={report.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">{getProblemTypeBadge(report.problemType)}</Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(report.timestamp), {
+                            addSuffix: true,
+                            locale: fr,
+                          })}
+                        </span>
+                      </div>
+                      {report.description && <p className="text-foreground">{report.description}</p>}
+                      {report.location && (
+                        <p className="text-sm text-muted-foreground">Localisation: {report.location}</p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }

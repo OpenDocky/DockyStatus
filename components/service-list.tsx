@@ -1,16 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, TrendingUp, TrendingDown } from "lucide-react"
-import { getServices } from "@/lib/data"
+import { getServices, Service } from "@/lib/data"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ServiceList() {
   const [search, setSearch] = useState("")
-  const services = getServices()
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      setLoading(true)
+      const services = await getServices()
+      setServices(services)
+      setLoading(false)
+    }
+    fetchServices()
+  }, [])
 
   const filteredServices = services.filter((service) => service.name.toLowerCase().includes(search.toLowerCase()))
 
@@ -56,43 +68,68 @@ export function ServiceList() {
         />
       </div>
 
-      <div className="space-y-3">
-        {filteredServices.map((service) => (
-          <Link key={service.id} href={`/service/${service.id}`}>
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="size-12 rounded-lg bg-muted flex items-center justify-center text-xl font-bold">
-                      {service.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground">{service.category}</p>
-                    </div>
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="size-12 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-4 w-16" />
                   </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 justify-end">
-                        <Badge variant="outline" className={`${getStatusColor(service.status)} text-white border-0`}>
-                          {getStatusText(service.status)}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{service.reportsCount} signalements (24h)</p>
-                    </div>
-                    {service.trend === "up" ? (
-                      <TrendingUp className="size-5 text-red-500" />
-                    ) : (
-                      <TrendingDown className="size-5 text-green-500" />
-                    )}
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right space-y-2">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-4 w-28" />
                   </div>
+                  <Skeleton className="size-5" />
                 </div>
               </CardContent>
             </Card>
-          </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredServices.map((service) => (
+            <Link key={service.id} href={`/service/${service.id}`}>
+              <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="size-12 rounded-lg bg-muted flex items-center justify-center text-xl font-bold">
+                        {service.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{service.name}</h3>
+                        <p className="text-sm text-muted-foreground">{service.category}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Badge variant="outline" className={`${getStatusColor(service.status)} text-white border-0`}>
+                            {getStatusText(service.status)}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{service.reportsCount} signalements (24h)</p>
+                      </div>
+                      {service.trend === "up" ? (
+                        <TrendingUp className="size-5 text-red-500" />
+                      ) : (
+                        <TrendingDown className="size-5 text-green-500" />
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

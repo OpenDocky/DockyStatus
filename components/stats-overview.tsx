@@ -1,11 +1,51 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, CheckCircle, TrendingUp, Building2 } from "lucide-react"
 import { getStats } from "@/lib/data"
+import { Skeleton } from "@/components/ui/skeleton"
+
+interface Stats {
+  totalServices: number;
+  operational: number;
+  issues: number;
+  reportsToday: number;
+}
 
 export function StatsOverview() {
-  const stats = getStats()
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true)
+      const stats = await getStats()
+      setStats(stats)
+      setLoading(false)
+    }
+    fetchStats()
+  }, [])
+
+  if (loading || !stats) {
+    return (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="size-10" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

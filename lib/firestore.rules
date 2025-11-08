@@ -1,0 +1,18 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow anyone to read services and reports
+    match /services/{serviceId} {
+      allow read: if true;
+      // Only allow authenticated users to write (create, update, delete)
+      allow write: if true;
+    }
+
+    match /reports/{reportId} {
+      allow read: if true;
+      allow write: if true; // Or more specific rules
+    }
+  }
+}

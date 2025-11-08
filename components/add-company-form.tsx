@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { addService } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
 
 export function AddCompanyForm() {
   const router = useRouter()
@@ -21,9 +22,11 @@ export function AddCompanyForm() {
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
   const [website, setWebsite] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
 
     if (!name || !category || !website) {
       toast({
@@ -31,22 +34,32 @@ export function AddCompanyForm() {
         description: "Veuillez remplir tous les champs obligatoires.",
         variant: "destructive",
       })
+      setLoading(false)
       return
     }
 
-    const newService = addService({
-      name,
-      category,
-      description,
-      website,
-    })
+    try {
+      const newService = await addService({
+        name,
+        category,
+        description,
+        website,
+      })
 
-    toast({
-      title: "Entreprise ajoutée",
-      description: "Votre service a été ajouté avec succès !",
-    })
+      toast({
+        title: "Entreprise ajoutée",
+        description: "Votre service a été ajouté avec succès !",
+      })
 
-    router.push(`/service/${newService.id}`)
+      router.push(`/service/${newService.id}`)
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'ajout du service.",
+        variant: "destructive",
+      })
+      setLoading(false)
+    }
   }
 
   return (
@@ -61,12 +74,13 @@ export function AddCompanyForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="category">Catégorie *</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select value={category} onValueChange={setCategory} required disabled={loading}>
               <SelectTrigger id="category">
                 <SelectValue placeholder="Sélectionnez une catégorie" />
               </SelectTrigger>
@@ -92,6 +106,7 @@ export function AddCompanyForm() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              disabled={loading}
             />
           </div>
 
@@ -104,14 +119,16 @@ export function AddCompanyForm() {
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
 
           <div className="flex gap-4">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Ajouter l'entreprise
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.back()}>
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
               Annuler
             </Button>
           </div>
