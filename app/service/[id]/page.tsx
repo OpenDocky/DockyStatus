@@ -11,6 +11,7 @@ export default function ServicePage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  
   useEffect(() => {
     const fetchService = async () => {
       if (!params.id) return;
