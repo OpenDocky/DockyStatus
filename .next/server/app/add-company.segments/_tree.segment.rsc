@@ -1,0 +1,12 @@
+1:"$Sreact.fragment"
+2:I[83090,["/_next/static/chunks/d1c704943c091ff6.js","/_next/static/chunks/a5fe8a17fa0cca71.js"],"ViewportBoundary"]
+4:I[83090,["/_next/static/chunks/d1c704943c091ff6.js","/_next/static/chunks/a5fe8a17fa0cca71.js"],"MetadataBoundary"]
+5:"$Sreact.suspense"
+7:I[39112,["/_next/static/chunks/d1c704943c091ff6.js","/_next/static/chunks/a5fe8a17fa0cca71.js"],"IconMark"]
+:HL["/_next/static/chunks/8a80e7184ad3a13f.css","style"]
+:HL["/_next/static/chunks/03cc08d0c856a5f2.css","style"]
+:HL["/_next/static/media/797e433ab948586e-s.p.dbea232f.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/caa3a2e1cccd8315-s.p.853070df.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+0:{"buildId":"9u9XsVxdxJPW6tbd7iyX3","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"add-company","paramType":null,"paramKey":"add-company","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"head":["$","$1","h",{"children":[null,["$","$L2",null,{"children":"$@3"}],["$","div",null,{"hidden":true,"children":["$","$L4",null,{"children":["$","$5",null,{"name":"Next.Metadata","children":"$@6"}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}],"isHeadPartial":false,"staleTime":300}
+3:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+6:[["$","title","0",{"children":"StatusWatch - Surveillez l'état des services"}],["$","meta","1",{"name":"description","content":"Plateforme de signalement de pannes et surveillance de l'état des services en temps réel"}],["$","meta","2",{"name":"generator","content":"v0.app"}],["$","link","3",{"rel":"icon","href":"/icon-light-32x32.png","media":"(prefers-color-scheme: light)"}],["$","link","4",{"rel":"icon","href":"/icon-dark-32x32.png","media":"(prefers-color-scheme: dark)"}],["$","link","5",{"rel":"icon","href":"/icon.svg","type":"image/svg+xml"}],["$","link","6",{"rel":"apple-touch-icon","href":"/apple-icon.png"}],["$","$L7","7",{}]]

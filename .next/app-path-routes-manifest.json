@@ -1,0 +1,8 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/add-company/page": "/add-company",
+  "/page": "/",
+  "/report/page": "/report",
+  "/service/[id]/page": "/service/[id]"
+}
