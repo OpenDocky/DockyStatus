@@ -39,6 +39,7 @@ export function ServiceList() {
     }
   }
 
+  
   const getStatusText = (status: string) => {
     switch (status) {
       case "operational":
