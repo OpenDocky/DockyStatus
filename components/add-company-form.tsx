@@ -53,11 +53,20 @@ export function AddCompanyForm() {
 
       router.push(`/service/${newService.id}`)
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'ajout du service.",
-        variant: "destructive",
-      })
+      const code = (error as any)?.code
+      if (code === "service/exists") {
+        toast({
+          title: "Déjà présent",
+          description: "Ce service existe déjà dans la liste.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de l'ajout du service.",
+          variant: "destructive",
+        })
+      }
       setLoading(false)
     }
   }

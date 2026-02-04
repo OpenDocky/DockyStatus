@@ -14,6 +14,16 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
+// Normalize service names to avoid duplicates caused by case, accents or extra spaces
+function normalizeServiceName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export interface Service {
   id: string
   name: string
@@ -23,6 +33,7 @@ export interface Service {
   status: "operational" | "degraded" | "down"
   reportsCount: number
   trend: "up" | "down"
+  normalizedName?: string
 }
 
 export interface Report {
@@ -219,21 +230,23 @@ export async function addService(data: {
 }) {
   console.log("Adding service:", data);
   try {
-    // Vérifie l'existence d'un service du même nom (case insensitive)
+    const normalizedName = normalizeServiceName(data.name);
+
+    // Vérifie l'existence d'un service du même nom (case/accents/espaces)
     const servicesCol = collection(db, "services");
-    const byName = query(servicesCol, where("name", "==", data.name));
-    const exactSnapshot = await getDocs(byName);
-    if (!exactSnapshot.empty) {
+    const byNormalized = query(servicesCol, where("normalizedName", "==", normalizedName));
+    const normalizedSnapshot = await getDocs(byNormalized);
+    if (!normalizedSnapshot.empty) {
       const err: any = new Error("Service already exists");
       err.code = "service/exists";
       throw err;
     }
 
-    // fallback case-insensitive si certains docs utilisent une casse différente
+    // fallback pour anciens enregistrements sans normalizedName
     const allSnapshot = await getDocs(servicesCol);
     const already = allSnapshot.docs.some((doc) => {
       const n = (doc.data() as any).name;
-      return typeof n === "string" && n.toLowerCase() === data.name.toLowerCase();
+      return typeof n === "string" && normalizeServiceName(n) === normalizedName;
     });
     if (already) {
       const err: any = new Error("Service already exists");
@@ -249,6 +262,7 @@ export async function addService(data: {
       status: "operational",
       reportsCount: 0,
       trend: "down",
+      normalizedName,
     }
 
     const serviceRef = await addDoc(collection(db, "services"), newService);
