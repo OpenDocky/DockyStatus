@@ -11,15 +11,18 @@ export function Header() {
             <div className="flex items-center justify-center size-10 rounded-lg bg-primary text-primary-foreground">
               <AlertCircle className="size-6" />
             </div>
-            <span className="text-xl font-bold">StatusWatch</span>
+            <span className="text-xl font-bold">DockyStatus</span>
           </Link>
 
           <nav className="flex items-center gap-4">
+            <Link href="/services">
+              <Button variant="ghost">Services</Button>
+            </Link>
             <Link href="/add-company">
               <Button variant="outline">Ajouter une entreprise</Button>
             </Link>
             <Link href="/report">
-              <Button>Signaler un problème</Button>
+              <Button>Signaler un problÃ¨me</Button>
             </Link>
           </nav>
         </div>

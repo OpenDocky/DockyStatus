@@ -24,7 +24,11 @@ export function ServiceList() {
     fetchServices()
   }, [])
 
-  const filteredServices = services.filter((service) => service.name.toLowerCase().includes(search.toLowerCase()))
+  const searchTerm = search.trim().toLowerCase()
+
+  const filteredServices = services
+    .filter((service) => service && typeof service.name === "string")
+    .filter((service) => service.name.toLowerCase().includes(searchTerm))
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -101,11 +105,11 @@ export function ServiceList() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="size-12 rounded-lg bg-muted flex items-center justify-center text-xl font-bold">
-                        {service.name.charAt(0)}
+                        {service.name?.charAt(0) ?? "?"}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg">{service.name}</h3>
-                        <p className="text-sm text-muted-foreground">{service.category}</p>
+                        <h3 className="font-semibold text-lg">{service.name ?? "Service"}</h3>
+                        <p className="text-sm text-muted-foreground">{service.category ?? "Non renseigné"}</p>
                       </div>
                     </div>
 
@@ -116,7 +120,7 @@ export function ServiceList() {
                             {getStatusText(service.status)}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{service.reportsCount} signalements (24h)</p>
+                        <p className="text-sm text-muted-foreground mt-1">{service.reportsCount ?? 0} signalements (24h)</p>
                       </div>
                       {service.trend === "up" ? (
                         <TrendingUp className="size-5 text-red-500" />

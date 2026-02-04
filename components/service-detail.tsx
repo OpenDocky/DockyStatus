@@ -17,13 +17,23 @@ interface ServiceDetailProps {
 
 export function ServiceDetail({ service }: ServiceDetailProps) {
   const [reports, setReports] = useState<Report[]>([])
+  const [reports24h, setReports24h] = useState<number>(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchReports = async () => {
       setLoading(true)
       const reports = await getReportsByServiceId(service.id)
+
+      const now = Date.now()
+      const last24h = now - 24 * 60 * 60 * 1000
+      const count24h = reports.filter((r) => {
+        const ts = r.timestamp ? new Date(r.timestamp).getTime() : 0
+        return ts >= last24h
+      }).length
+
       setReports(reports)
+      setReports24h(count24h)
       setLoading(false)
     }
     fetchReports()
@@ -99,7 +109,7 @@ export function ServiceDetail({ service }: ServiceDetailProps) {
           <div className="mt-4 flex items-center gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Signalements (24h)</p>
-              <p className="text-2xl font-bold">{service.reportsCount}</p>
+              <p className="text-2xl font-bold">{reports24h}</p>
             </div>
             <div className="border-l pl-4">
               <p className="text-sm text-muted-foreground">Site web</p>

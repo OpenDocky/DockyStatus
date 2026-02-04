@@ -1,5 +1,18 @@
 import { db } from "./firebase";
-import { collection, getDocs, getDoc, doc, addDoc, updateDoc, query, where, limit, orderBy } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  limit,
+  orderBy,
+  Timestamp,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export interface Service {
   id: string
@@ -55,34 +68,74 @@ export async function getServiceById(id: string): Promise<Service | undefined> {
     }
 }
 
+function mapReportSnapshot(snapshot: any): Report {
+  const data = snapshot.data() as any;
+  const ts = data.timestamp;
+  const timestamp =
+    ts instanceof Timestamp ? ts.toDate().toISOString() : typeof ts === "string" ? ts : new Date().toISOString();
+
+  return {
+    id: snapshot.id,
+    serviceId: data.serviceId,
+    serviceName: data.serviceName,
+    problemType: data.problemType,
+    description: data.description,
+    location: data.location,
+    timestamp,
+  } as Report;
+}
+
 export async function getRecentReports(): Promise<Report[]> {
-    console.log("Fetching recent reports...");
-    try {
-        const reportsCol = collection(db, 'reports');
-        const q = query(reportsCol, orderBy("timestamp", "desc"), limit(10));
-        const reportSnapshot = await getDocs(q);
-        const reportList = reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
-        console.log("Recent reports fetched:", reportList);
-        return reportList;
-    } catch (error) {
-        console.error("Error fetching recent reports:", error);
-        return [];
-    }
+  console.log("Fetching recent reports...");
+  try {
+    const reportsCol = collection(db, "reports");
+    const q = query(reportsCol, orderBy("timestamp", "desc"), limit(10));
+    const reportSnapshot = await getDocs(q);
+    const reportList = reportSnapshot.docs.map(mapReportSnapshot);
+    console.log("Recent reports fetched:", reportList);
+    return reportList;
+  } catch (error) {
+    console.error("Error fetching recent reports:", error);
+    return [];
+  }
+}
+
+export async function getReportsLast24h(): Promise<Report[]> {
+  console.log("Fetching reports last 24h...");
+  try {
+    const reportsCol = collection(db, "reports");
+    // On récupère tout et on filtre côté client pour éviter les soucis de typage hétérogène (string vs timestamp)
+    const reportSnapshot = await getDocs(reportsCol);
+    const all = reportSnapshot.docs.map(mapReportSnapshot);
+
+    const now = Date.now();
+    const last24h = now - 24 * 60 * 60 * 1000;
+    const recent = all.filter((r) => {
+      const ts = r.timestamp ? new Date(r.timestamp).getTime() : 0;
+      return ts >= last24h;
+    });
+
+    console.log("Reports last 24h fetched:", recent.length);
+    return recent;
+  } catch (error) {
+    console.error("Error fetching reports last 24h:", error);
+    return [];
+  }
 }
 
 export async function getReportsByServiceId(serviceId: string): Promise<Report[]> {
-    console.log(`Fetching reports for service with id: ${serviceId}`);
-    try {
-        const reportsCol = collection(db, 'reports');
-        const q = query(reportsCol, where("serviceId", "==", serviceId));
-        const reportSnapshot = await getDocs(q);
-        const reportList = reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report));
-        console.log("Reports fetched:", reportList);
-        return reportList;
-    } catch (error) {
-        console.error("Error fetching reports:", error);
-        return [];
-    }
+  console.log(`Fetching reports for service with id: ${serviceId}`);
+  try {
+    const reportsCol = collection(db, "reports");
+    const q = query(reportsCol, where("serviceId", "==", serviceId));
+    const reportSnapshot = await getDocs(q);
+    const reportList = reportSnapshot.docs.map(mapReportSnapshot);
+    console.log("Reports fetched:", reportList);
+    return reportList;
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    return [];
+  }
 }
 
 export async function getStats() {
@@ -110,10 +163,10 @@ export async function getStats() {
 }
 
 export async function addReport(data: {
-  serviceId: string
-  problemType: "connection" | "slow" | "outage"
-  description: string
-  location: string
+  serviceId: string;
+  problemType: "connection" | "slow" | "outage";
+  description: string;
+  location: string;
 }) {
   console.log("Adding report:", data);
   try {
@@ -129,13 +182,13 @@ export async function addReport(data: {
       problemType: data.problemType,
       description: data.description,
       location: data.location,
-      timestamp: new Date().toISOString(),
-    }
+      timestamp: serverTimestamp(),
+    };
 
     const reportRef = await addDoc(collection(db, "reports"), newReport);
 
     const serviceRef = doc(db, "services", data.serviceId);
-    const newReportsCount = service.reportsCount + 1;
+    const newReportsCount = (service.reportsCount ?? 0) + 1;
     let newStatus = service.status;
 
     if (newReportsCount > 100) {
@@ -149,11 +202,12 @@ export async function addReport(data: {
       status: newStatus
     });
 
-    const result = { id: reportRef.id, ...newReport };
+    const result = { id: reportRef.id, ...newReport, timestamp: new Date().toISOString() };
     console.log("Report added:", result);
     return result;
   } catch (error) {
     console.error("Error adding report:", error);
+    throw error;
   }
 }
 
@@ -165,6 +219,28 @@ export async function addService(data: {
 }) {
   console.log("Adding service:", data);
   try {
+    // Vérifie l'existence d'un service du même nom (case insensitive)
+    const servicesCol = collection(db, "services");
+    const byName = query(servicesCol, where("name", "==", data.name));
+    const exactSnapshot = await getDocs(byName);
+    if (!exactSnapshot.empty) {
+      const err: any = new Error("Service already exists");
+      err.code = "service/exists";
+      throw err;
+    }
+
+    // fallback case-insensitive si certains docs utilisent une casse différente
+    const allSnapshot = await getDocs(servicesCol);
+    const already = allSnapshot.docs.some((doc) => {
+      const n = (doc.data() as any).name;
+      return typeof n === "string" && n.toLowerCase() === data.name.toLowerCase();
+    });
+    if (already) {
+      const err: any = new Error("Service already exists");
+      err.code = "service/exists";
+      throw err;
+    }
+
     const newService = {
       name: data.name,
       category: data.category,

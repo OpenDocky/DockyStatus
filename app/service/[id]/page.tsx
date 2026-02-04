@@ -1,23 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Header } from "@/components/header"
 import { ServiceDetail } from "@/components/service-detail"
 import { getServiceById, Service } from "@/lib/data"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export default function ServicePage({ params }: { params: { id: string } }) {
+type ServiceParams = Promise<{ id: string }>
+
+export default function ServicePage({ params }: { params: ServiceParams }) {
+  const { id } = use(params)
+
   const [service, setService] = useState<Service | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  
   useEffect(() => {
     const fetchService = async () => {
-      if (!params.id) return;
+      if (!id) return
       setLoading(true)
       try {
-        const fetchedService = await getServiceById(params.id)
+        const fetchedService = await getServiceById(id)
         if (fetchedService) {
           setService(fetchedService)
         } else {
@@ -32,7 +35,7 @@ export default function ServicePage({ params }: { params: { id: string } }) {
     }
 
     fetchService()
-  }, [params.id])
+  }, [id])
 
   return (
     <div className="min-h-screen bg-background">

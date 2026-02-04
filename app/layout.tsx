@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "StatusWatch - Surveillez l'état des services",
+  title: "DockyStatus - Surveillez l'état des services",
   description: "Plateforme de signalement de pannes et surveillance de l'état des services en temps réel",
   generator: "v0.app",
   icons: {
@@ -38,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
         <Toaster />
         <Analytics />
@@ -46,5 +46,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
