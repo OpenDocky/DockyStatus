@@ -31,8 +31,9 @@ function mapService(row: ServiceRow): Service {
   };
 }
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const raw = params.id?.trim();
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const raw = resolvedParams.id?.trim();
   if (!raw) {
     return NextResponse.json({ error: "Service not found" }, { status: 404 });
   }
