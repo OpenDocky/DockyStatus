@@ -31,36 +31,35 @@ function mapService(row: ServiceRow): Service {
   };
 }
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const raw = params.id?.trim();
   if (!raw) {
     return NextResponse.json({ error: "Service not found" }, { status: 404 });
   }
 
-  // Match by UUID (case-insensitive) then fall back to normalized/name lookup.
-  const queries = [
-    {
-      text: `select id, name, category, description, website, status, reports_count, trend, normalized_name
-             from services
-             where lower(id::text) = lower($1)
-             limit 1`,
-      params: [raw],
-    },
-    {
-      text: `select id, name, category, description, website, status, reports_count, trend, normalized_name
-             from services
-             where normalized_name = $1
-                or lower(name) = lower($1)
-             limit 1`,
-      params: [raw],
-    },
-  ];
+  // Try by UUID (case-insensitive)
+  const byId = await query<ServiceRow>(
+    `select id, name, category, description, website, status, reports_count, trend, normalized_name
+     from services
+     where lower(id::text) = lower($1)
+     limit 1`,
+    [raw]
+  );
+  if (byId.rows.length) {
+    return NextResponse.json(mapService(byId.rows[0]));
+  }
 
-  for (const q of queries) {
-    const { rows } = await query<ServiceRow>(q.text, q.params);
-    if (rows.length) {
-      return NextResponse.json(mapService(rows[0]));
-    }
+  // Fallback by normalized_name or name (helps if a slug was used)
+  const fallback = await query<ServiceRow>(
+    `select id, name, category, description, website, status, reports_count, trend, normalized_name
+     from services
+     where normalized_name = $1
+        or lower(name) = lower($1)
+     limit 1`,
+    [raw]
+  );
+  if (fallback.rows.length) {
+    return NextResponse.json(mapService(fallback.rows[0]));
   }
 
   return NextResponse.json({ error: "Service not found" }, { status: 404 });
